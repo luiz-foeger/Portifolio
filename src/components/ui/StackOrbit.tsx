@@ -3,7 +3,7 @@
     import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { useCursor } from '../ui/CursorContext';
+// import { useCursor } from '../ui/CursorContext';
 
 import {
     SiNextdotjs, SiTypescript, SiJavascript, SiTailwindcss,
@@ -71,8 +71,9 @@ const RING_CONTENT = {
 };
 
 const StackOrbit = () => {
-    const { setCursorType } = useCursor();
+    // const { setCursorType } = useCursor();
     const [isMobile, setIsMobile] = useState(false);
+    const [arrastandoIcone, setArrastandoIcone] = useState(false);
     
     // estado que guarda qual anel está com o mouse em cima (0, 1, 2 ou null)
     const [activeText, setActiveText] = useState<number | 'default' | 'center'>('default');
@@ -85,16 +86,29 @@ const StackOrbit = () => {
         return () => window.removeEventListener('resize', checkScreen);
     }, []);
 
+    useEffect(() => {
+        if (!arrastandoIcone) return;
+        document.body.classList.add('arrastando');
+        const encerrarArrasto = () => setArrastandoIcone(false);
+        window.addEventListener('pointerup', encerrarArrasto);
+        window.addEventListener('pointercancel', encerrarArrasto);
+        return () => {
+            document.body.classList.remove('arrastando');
+            window.removeEventListener('pointerup', encerrarArrasto);
+            window.removeEventListener('pointercancel', encerrarArrasto);
+        };
+    }, [arrastandoIcone]);
+
     // define o conteúdo baseado no hover
     const currentContent = RING_CONTENT[activeText !== null ? activeText as keyof typeof RING_CONTENT : 'default'];
     // const currentContent = RING_CONTENT[activeRing !== null ? activeRing as keyof typeof RING_CONTENT : 'default'];
 
     return (
         <div className="relative flex flex-col lg:flex-row items-center justify-between w-full min-h-[700px] md:min-h-[900px] py-20 lg:py-0 px-6 md:px-12 lg:px-24 overflow-hidden bg-[#050505]"
-            onMouseEnter={() => setCursorType('grab')}
-            onMouseLeave={() => setCursorType('default')}
-            onMouseDown={() => setCursorType('grabbing')}
-            onMouseUp={() => setCursorType('grab')} 
+            // onMouseEnter={() => setCursorType('grab')}
+            // onMouseLeave={() => setCursorType('default')}
+            // onMouseDown={() => setCursorType('grabbing')}
+            // onMouseUp={() => setCursorType('grab')}
         >
             
             {/* left content */}
@@ -124,7 +138,7 @@ const StackOrbit = () => {
 
 
             {/* center content */}
-            <div className="relative flex items-center justify-center w-full lg:w-[40%] h-[500px] md:h-[650px] z-20">  
+            <div className="relative flex items-center justify-center w-full lg:w-[40%] h-[500px] md:h-[650px] z-20 cursor-grab">  
                 <div 
                     className="absolute z-20 flex items-center justify-center pointer-events-auto group"
                     onMouseEnter={() => setActiveText('center')}
@@ -146,15 +160,15 @@ const StackOrbit = () => {
 
                   <OrbitRing 
                     index={0} size={isMobile ? 180 : 300} duration={25} items={INNER_ORBIT} 
-                    isActive={activeText === 0} onHover={(idx) => setActiveText(idx ?? 'default')} 
+                    isActive={activeText === 0} onHover={(idx) => setActiveText(idx ?? 'default')} onArrastar={setArrastandoIcone} 
                 />
                 <OrbitRing 
                     index={1} size={isMobile ? 290 : 470} duration={40} reverse items={MIDDLE_ORBIT} 
-                    isActive={activeText === 1} onHover={(idx) => setActiveText(idx ?? 'default')} 
+                    isActive={activeText === 1} onHover={(idx) => setActiveText(idx ?? 'default')} onArrastar={setArrastandoIcone} 
                 />
                 <OrbitRing 
                     index={2} size={isMobile ? 400 : 640} duration={60} items={OUTER_ORBIT} 
-                    isActive={activeText === 2} onHover={(idx) => setActiveText(idx ?? 'default')} 
+                    isActive={activeText === 2} onHover={(idx) => setActiveText(idx ?? 'default')} onArrastar={setArrastandoIcone} 
                 />
             </div>
 
@@ -195,9 +209,10 @@ interface OrbitRingProps {
     items: OrbitItem[];
     isActive: boolean;
     onHover: (index: number | null) => void;
+    onArrastar: (arrastando: boolean) => void;
 }
 
-const OrbitRing = ({ index, size, duration, reverse = false, items, isActive, onHover }: OrbitRingProps) => {
+const OrbitRing = ({ index, size, duration, reverse = false, items, isActive, onHover, onArrastar }: OrbitRingProps) => {
     const angleStep = 360 / items.length;
     const svgSize = size + 60; 
 
@@ -214,7 +229,7 @@ const OrbitRing = ({ index, size, duration, reverse = false, items, isActive, on
                     fill="none"
                     stroke="transparent"
                     strokeWidth="40"
-                    style={{ pointerEvents: 'stroke', cursor: 'crosshair' }}
+                    style={{ pointerEvents: 'stroke' }}
                     onMouseEnter={() => onHover(index)}
                     onMouseLeave={() => onHover(null)}
                 />
@@ -258,9 +273,11 @@ const OrbitRing = ({ index, size, duration, reverse = false, items, isActive, on
                                     dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                                     dragElastic={0.2}
                                     whileHover={{ scale: 1.2, backgroundColor: "rgba(255,255,255,0.1)" }}
-                                    whileTap={{ scale: 0.9, cursor: "grabbing" }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onDragStart={() => onArrastar(true)}
+                                    onDragEnd={() => onArrastar(false)}
                                     // a caixinha acende a borda levemente se o anel inteiro estiver ativo
-                                    className={`w-11 h-11 md:w-16 md:h-16 bg-[#0a0a0afb] border rounded-xl flex items-center justify-center shadow-lg group transition-colors duration-300 cursor-grab ${isActive ? 'border-[#8DCFFB]/50' : 'border-white/10 hover:border-[#8DCFFB]'}`}
+                                    className={`w-11 h-11 md:w-16 md:h-16 bg-[#0a0a0afb] border rounded-xl flex items-center justify-center shadow-lg group transition-colors duration-300 ${isActive ? 'border-[#8DCFFB]/50' : 'border-white/10 hover:border-[#8DCFFB]'}`}
                                 >
                                     <item.icon className={`text-xl md:text-3xl transition-colors ${isActive ? 'text-white' : 'text-gray-500'} group-hover:text-white`} />
 

@@ -4,7 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import './App.css';
 
 import { CursorProvider } from './components/ui/CursorContext';
-import { CustomCursor } from './components/ui/CustomCursor';
+// import { CustomCursor } from './components/ui/CustomCursor';
 import SmoothScroll from './components/ui/SmoothScroll';
 
 import Home from './pages/Home';
@@ -23,7 +23,7 @@ function App() {
   return (
     <SmoothScroll>
       <CursorProvider>
-        <CustomCursor />
+        {/* <CustomCursor /> */}
         <div className="App">
           {/* <Header /> */}
           
